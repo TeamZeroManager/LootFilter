@@ -89,3 +89,34 @@ La inspección del mismo JAR también confirma:
 
 Esto permite investigar compatibilidad con packs sin leer configuraciones personales: la clasificación se puede estudiar a partir de la API y de los identificadores registrados. Los métodos de índices del cliente no deben invocarse desde lógica de servidor dedicado sin verificar su lado de ejecución.
 
+
+## Segunda pasada: flujo de eventos en bytecode
+
+Se inspeccionó el bytecode del mismo JAR con `javap -c -p`, buscando los puntos que publican eventos. Esto sigue siendo análisis estático; no sustituye una prueba en un cliente/servidor real.
+
+### `GunFireEvent`
+
+- En la ruta de disparo del cliente (`LocalPlayerShoot`) se publica un `GunFireEvent` con `LogicalSide.CLIENT`.
+- En la ruta de disparo del servidor (`ModernKineticGunScriptAPI`) también se publica un `GunFireEvent` con `LogicalSide.SERVER`.
+- El servidor envía además un mensaje de evento que vuelve a publicar una versión CLIENT en el cliente. Por tanto, un listener puede recibir eventos de ambos lados para un disparo y debe filtrar el lado antes de ejecutar efectos de gameplay.
+- En la ruta de servidor, el resultado booleano de `EVENT_BUS.post(...)` se consulta antes de continuar con el envío del evento de disparo. Como el evento es cancelable, un listener externo podría impedir que esa ruta continúe; nuestros encantamientos no deben cancelar el disparo salvo que un diseño lo requiera explícitamente.
+
+### `EntityHurtByGunEvent.Pre` y `Post`
+
+- En `EntityKineticBullet`, el evento `Pre` se publica en el lado `SERVER` antes de aplicar el daño final.
+- Si el evento se cancela, el método retorna inmediatamente y no continúa con esa resolución de daño.
+- Si no se cancela, la lógica vuelve a leer del evento la entidad afectada, el atacante, el identificador del arma, el daño base, las fuentes de daño y los valores de headshot. Por tanto, los cambios efectuados por listeners al evento `Pre` afectan a la resolución posterior.
+- En la ruta observada para entidades vivas, el evento `Post` se publica en el lado `SERVER` tras el procesamiento de daño cuando la víctima no ha muerto; la ruta de muerte publica un evento separado de muerte por arma. Así que `Post` no debe interpretarse como sinónimo universal de «cualquier impacto», y los efectos de muerte requieren investigación aparte.
+- El mensaje de daño del servidor vuelve a emitir un `EntityHurtByGunEvent.Post` en el lado `CLIENT` para la presentación. Los efectos que cambian gameplay deben mantenerse autoritativos en el servidor y no duplicarse en el cliente.
+- Se observó una ruta adicional de impacto en `TargetMinecart`; no se debe asumir que toda clase de objetivo usa exactamente el mismo flujo que `EntityKineticBullet`.
+
+### Consecuencia provisional para el diseño
+
+1. Para reaccionar al disparo, usar `GunFireEvent` filtrado por `LogicalSide.SERVER`, y validar el tirador y el `ItemStack` antes de leer datos propios.
+2. Para modificar el daño, estudiar `EntityHurtByGunEvent.Pre`; evitar cancelar el evento y preferir cambios mínimos y acotados.
+3. Para efectos posteriores al daño, usar `Post` solo cuando el tipo de objetivo y la ruta de impacto estén cubiertos. Si se necesita soportar todos los impactos, incluidas muertes y objetivos no vivos, hace falta una decisión explícita y pruebas adicionales.
+4. Añadir pruebas de cliente y servidor para verificar el número de invocaciones por disparo/impacto y prevenir efectos duplicados.
+
+## Estado actualizado
+
+Esta pasada reduce las dudas sobre el orden y los lados de los eventos en las rutas inspeccionadas, pero **no cierra la Fase 1**: faltan pruebas en ejecución, decisión de persistencia de encantamientos y criterios de alcance de la primera versión.
