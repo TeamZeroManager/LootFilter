@@ -28,7 +28,8 @@ The built mod JAR will be in `build/libs/`.
 ## Current status
 
 - [x] Forge 1.20.1 project scaffold
-- [x] Mod metadata and enchantment registry
-- [ ] Register the first enchantment
-- [ ] Hook enchantment effects into TaCZ weapon/projectile gameplay
-- [ ] Add automated build and runtime testing
+- [x] Mod metadata and stable internal enchantment definitions
+- [x] Namespaced NBT storage for enchantment levels, preserving unrelated item data
+- [x] First server-side TaCZ impact hook: deterministic Incendiary effect on supported kinetic bullets
+- [ ] Add the player-facing method to obtain/apply enchantments (planned for later roadmap phases)
+- [ ] Verify the build and run the first in-game effect test
