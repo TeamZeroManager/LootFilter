@@ -24,8 +24,8 @@ public record EnchantingActionPacket(int level) {
     public static void handle(EnchantingActionPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
-            if (!(context.getSender() instanceof ServerPlayer player)
-                    || !(player.containerMenu instanceof EnchantingMenu)
+            ServerPlayer player = context.getSender();
+            if (player == null || !(player.containerMenu instanceof EnchantingMenu)
                     || packet.level() < 0 || packet.level() > 3) {
                 return;
             }
