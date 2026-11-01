@@ -45,22 +45,18 @@ public final class GunSmithTableVisuals {
         ItemStack gun = findHeldGun(minecraft);
         if (gun.isEmpty()) return;
 
-        BlockPos center = minecraft.player.blockPosition();
-        RandomSource random = level.random;
-        for (BlockPos pos : BlockPos.betweenClosed(
-                center.offset(-SEARCH_RADIUS, -SEARCH_RADIUS, -SEARCH_RADIUS),
-                center.offset(SEARCH_RADIUS, SEARCH_RADIUS, SEARCH_RADIUS))) {
-            if (!isGunSmithTable(level.getBlockState(pos))) continue;
+        BlockPos table = findNearestTable(level, minecraft.player.blockPosition());
+        if (table == null) return;
 
-            // Low particle rate to keep the effect subtle and inexpensive.
-            if (level.getGameTime() % 3L == 0L) {
-                double x = pos.getX() + 0.5D + (random.nextDouble() - 0.5D) * 0.9D;
-                double z = pos.getZ() + 0.5D + (random.nextDouble() - 0.5D) * 0.9D;
-                double y = pos.getY() + 1.08D + random.nextDouble() * 0.28D;
-                level.addParticle(ParticleTypes.ENCHANT, x, y, z,
-                        (random.nextDouble() - 0.5D) * 0.04D, 0.035D,
-                        (random.nextDouble() - 0.5D) * 0.04D);
-            }
+        // Subtle particles only around the single table selected for the floating gun.
+        if (level.getGameTime() % 3L == 0L) {
+            RandomSource random = level.random;
+            double x = table.getX() + 0.5D + (random.nextDouble() - 0.5D) * 0.9D;
+            double z = table.getZ() + 0.5D + (random.nextDouble() - 0.5D) * 0.9D;
+            double y = table.getY() + 1.08D + random.nextDouble() * 0.28D;
+            level.addParticle(ParticleTypes.ENCHANT, x, y, z,
+                    (random.nextDouble() - 0.5D) * 0.04D, 0.035D,
+                    (random.nextDouble() - 0.5D) * 0.04D);
         }
     }
 
@@ -74,7 +70,9 @@ public final class GunSmithTableVisuals {
         if (gun.isEmpty()) return;
 
         Level level = minecraft.level;
-        BlockPos center = minecraft.player.blockPosition();
+        BlockPos table = findNearestTable(level, minecraft.player.blockPosition());
+        if (table == null) return;
+
         PoseStack poseStack = event.getPoseStack();
         MultiBufferSource.BufferSource buffers = minecraft.renderBuffers().bufferSource();
         ItemRenderer itemRenderer = minecraft.getItemRenderer();
@@ -83,26 +81,40 @@ public final class GunSmithTableVisuals {
         double cameraY = cameraPosition.y;
         double cameraZ = cameraPosition.z;
 
+        // Render exactly one gun, centered on the selected table's top surface.
+        double time = level.getGameTime() + event.getPartialTick();
+        double bob = Math.sin(time * 0.08D) * 0.035D;
+        poseStack.pushPose();
+        poseStack.translate(table.getX() + 0.5D - cameraX,
+                table.getY() + 1.12D + bob - cameraY,
+                table.getZ() + 0.5D - cameraZ);
+        poseStack.mulPose(Axis.YP.rotationDegrees((float) (time * 1.1D % 360.0D)));
+        poseStack.mulPose(Axis.XP.rotationDegrees(-18.0F));
+        poseStack.scale(0.28F, 0.28F, 0.28F);
+        itemRenderer.renderStatic(gun, ItemDisplayContext.FIXED,
+                LevelRenderer.getLightColor(level, table.above()), OverlayTexture.NO_OVERLAY,
+                poseStack, buffers, level, 0);
+        poseStack.popPose();
+        buffers.endBatch();
+    }
+
+    private static BlockPos findNearestTable(Level level, BlockPos center) {
+        BlockPos nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
         for (BlockPos pos : BlockPos.betweenClosed(
                 center.offset(-SEARCH_RADIUS, -SEARCH_RADIUS, -SEARCH_RADIUS),
                 center.offset(SEARCH_RADIUS, SEARCH_RADIUS, SEARCH_RADIUS))) {
             if (!isGunSmithTable(level.getBlockState(pos))) continue;
-
-            double time = level.getGameTime() + event.getPartialTick();
-            double bob = Math.sin(time * 0.08D) * 0.035D;
-            poseStack.pushPose();
-            poseStack.translate(pos.getX() + 0.5D - cameraX,
-                    pos.getY() + 1.12D + bob - cameraY,
-                    pos.getZ() + 0.5D - cameraZ);
-            poseStack.mulPose(Axis.YP.rotationDegrees((float) (time * 1.1D % 360.0D)));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-18.0F));
-            poseStack.scale(0.28F, 0.28F, 0.28F);
-            itemRenderer.renderStatic(gun, ItemDisplayContext.FIXED,
-                    LevelRenderer.getLightColor(level, pos.above()), OverlayTexture.NO_OVERLAY,
-                    poseStack, buffers, level, 0);
-            poseStack.popPose();
+            double dx = pos.getX() + 0.5D - (center.getX() + 0.5D);
+            double dy = pos.getY() + 0.5D - (center.getY() + 0.5D);
+            double dz = pos.getZ() + 0.5D - (center.getZ() + 0.5D);
+            double distance = dx * dx + dy * dy + dz * dz;
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearest = pos.immutable();
+            }
         }
-        buffers.endBatch();
+        return nearest;
     }
 
     private static boolean isGunSmithTable(BlockState state) {
