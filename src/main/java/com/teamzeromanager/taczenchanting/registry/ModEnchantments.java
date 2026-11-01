@@ -1,24 +1,30 @@
 package com.teamzeromanager.taczenchanting.registry;
 
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
-
-import java.util.function.Supplier;
+import java.util.Map;
+import java.util.Optional;
 
 /**
- * Central registry for Tacz Enchanting's custom enchantments.
- * New enchantments should be registered here as their mechanics are implemented.
+ * Stable identifiers and metadata for mod-owned enchantments.
+ *
+ * Levels are stored in the item's own "taczenchanting" NBT compound rather
+ * than overwriting TaCZ or vanilla item data.
  */
 public final class ModEnchantments {
-    public static final DeferredRegister<Enchantment> ENCHANTMENTS =
-            DeferredRegister.create(ForgeRegistries.ENCHANTMENTS, "taczenchanting");
+    public static final String INCENDIARY = "incendiary";
+
+    public record Definition(String id, int maxLevel) {}
+
+    private static final Map<String, Definition> DEFINITIONS = Map.of(
+            INCENDIARY, new Definition(INCENDIARY, 3)
+    );
 
     private ModEnchantments() {}
 
-    public static void register(IEventBus modEventBus) {
-        ENCHANTMENTS.register(modEventBus);
+    public static Optional<Definition> get(String id) {
+        return Optional.ofNullable(DEFINITIONS.get(id));
+    }
+
+    public static Map<String, Definition> all() {
+        return DEFINITIONS;
     }
 }
