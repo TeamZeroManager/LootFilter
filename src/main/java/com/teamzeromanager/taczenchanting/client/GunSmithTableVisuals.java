@@ -92,11 +92,11 @@ public final class GunSmithTableVisuals {
             double bob = Math.sin(time * 0.08D) * 0.035D;
             poseStack.pushPose();
             poseStack.translate(pos.getX() + 0.5D - cameraX,
-                    pos.getY() + 1.36D + bob - cameraY,
+                    pos.getY() + 1.12D + bob - cameraY,
                     pos.getZ() + 0.5D - cameraZ);
             poseStack.mulPose(Axis.YP.rotationDegrees((float) (time * 1.1D % 360.0D)));
             poseStack.mulPose(Axis.XP.rotationDegrees(-18.0F));
-            poseStack.scale(0.78F, 0.78F, 0.78F);
+            poseStack.scale(0.28F, 0.28F, 0.28F);
             itemRenderer.renderStatic(gun, ItemDisplayContext.FIXED,
                     LevelRenderer.getLightColor(level, pos.above()), OverlayTexture.NO_OVERLAY,
                     poseStack, buffers, level, 0);
