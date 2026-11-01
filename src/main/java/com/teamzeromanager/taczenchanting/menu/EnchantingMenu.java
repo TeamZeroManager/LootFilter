@@ -21,9 +21,6 @@ public final class EnchantingMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return !player.isRemoved() && player.distanceToSqr(
-                player.level().getSharedSpawnPos().getX(),
-                player.level().getSharedSpawnPos().getY(),
-                player.level().getSharedSpawnPos().getZ()) < Double.MAX_VALUE;
+        return player.isAlive() && !player.isRemoved();
     }
 }
