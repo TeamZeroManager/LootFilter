@@ -40,10 +40,15 @@ minecraft {
 
 repositories {
     maven { url = 'https://www.cursemaven.com' }
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+    }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    implementation fg.deobf("maven.modrinth:SzzJttH8:AzCBJlex")
 }
 
 tasks.named('processResources', ProcessResources).configure {
