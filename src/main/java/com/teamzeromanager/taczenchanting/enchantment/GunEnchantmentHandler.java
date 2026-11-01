@@ -76,10 +76,9 @@ public final class GunEnchantmentHandler {
             return;
         }
 
-        // Levels I–III set a predictable 2–4 second burn. Repeated impacts
-        // follow Minecraft's normal fire timer behavior rather than stacking
-        // unbounded duration.
-        target.setSecondsOnFire(1 + Math.min(level, 3));
+        // Fixed, deterministic duration by level: I = 2s, II = 4s, III = 6s.
+        // Repeated impacts use Minecraft's normal fire timer behavior.
+        target.setSecondsOnFire(2 * Math.min(level, 3));
     }
 
     private static ItemStack findMatchingGun(LivingEntity shooter, ResourceLocation gunId,
