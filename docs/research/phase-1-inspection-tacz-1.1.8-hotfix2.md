@@ -168,3 +168,10 @@ El bytecode de `GunItemDataAccessor` aclara que `installAttachment(gunStack, att
 Consecuencia: los datos propios guardados en el NBT del `ItemStack` de un accesorio podrían conservarse al instalarlo, porque TaCZ serializa el stack completo. Sin embargo, el ciclo de retirada, sustitución, sincronización y guardado debe probarse en runtime antes de prometer que los encantamientos de miras se conservan en todos los casos. No se debe escribir directamente en las claves de accesorio que usa TaCZ; nuestros datos deben vivir en su propio sub-compuesto.
 
 Este hallazgo refuerza la propuesta de mantener encantamientos de armas en el stack del arma y encantamientos de mira en el stack de la mira, con una clave NBT propia y lectura tolerante a datos ausentes.
+### Clasificación de armas: límite de la API examinada
+
+`CommonGunIndex` expone `getType()`, `getGunData()` y `getPojo()`. El objeto de índice (`GunIndexPOJO`) también expone `getType()` y `getItemType()`. En cambio, `GunData` describe principalmente propiedades de funcionamiento: munición, cadencia, modos de disparo, recarga, retroceso, accesorios permitidos, accesorios integrados, peso y datos de proyectil.
+
+No se ha encontrado en estas clases una enumeración pública y universal de categorías de diseño como «pistola», «escopeta» o «francotirador». Por eso no debemos asumir que `getType()` equivale a una categoría de gameplay. Antes de definir encantamientos exclusivos por categoría en la Fase 2, hay que revisar los datos registrados de armas reales y de Gun Packs y decidir una clasificación extensible que tenga un fallback para armas desconocidas.
+
+Esto es importante para compatibilidad amplia: una lista codificada de IDs de armas sería frágil. La detección básica debe ser genérica; las categorías especiales deben basarse en datos explícitos y admitir que un arma desconocida siga funcionando con encantamientos compartidos compatibles.
