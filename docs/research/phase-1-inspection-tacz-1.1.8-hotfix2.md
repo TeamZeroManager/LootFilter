@@ -120,3 +120,44 @@ Se inspeccionó el bytecode del mismo JAR con `javap -c -p`, buscando los puntos
 ## Estado actualizado
 
 Esta pasada reduce las dudas sobre el orden y los lados de los eventos en las rutas inspeccionadas, pero **no cierra la Fase 1**: faltan pruebas en ejecución, decisión de persistencia de encantamientos y criterios de alcance de la primera versión.
+## Tercera pasada: detección genérica y persistencia propuesta
+
+### Detección de armas sin listas cerradas
+
+El bytecode de `IGun.getIGunOrNull(ItemStack)` confirma que el método devuelve la implementación de `IGun` del objeto contenido en el `ItemStack`, o `null` si el objeto no implementa esa interfaz. No compara el nombre traducido ni depende de una lista de IDs de armas.
+
+Implicación: la detección inicial debe basarse en `IGun.getIGunOrNull(stack) != null`. Para reconocer una definición concreta se pueden consultar los `ResourceLocation` de `getGunId(stack)` y `getGunDisplayId(stack)`. Esto es prometedor para armas de Gun Packs que reutilicen la implementación de arma de TaCZ, pero el soporte real de cada pack sigue pendiente de prueba; no debe anunciarse como universal todavía.
+
+El método `AbstractGunItem.isSame` compara el `gunId` y el `gunDisplayId` de dos armas reconocidas. Es una señal de que TaCZ distingue el tipo de arma mediante esos identificadores, no solo mediante el nombre o la clase Java.
+
+### Persistencia de los encantamientos: decisión propuesta para validar
+
+Para Minecraft 1.20.1, la propuesta inicial es guardar nuestros datos en un sub-compuesto NBT propio dentro del `ItemStack`, usando una clave raíz exclusiva del mod, por ejemplo `taczenchanting`, y no modificar claves de TaCZ. Dentro se separarían los encantamientos del arma y, cuando corresponda, los de la mira/accesorio.
+
+- Los datos del arma se guardarían en el `ItemStack` del arma.
+- Los datos de una mira o accesorio se guardarían en el `ItemStack` de ese accesorio, si la integración elegida confirma que TaCZ conserva ese stack al instalarlo y retirarlo.
+- Se guardaría un identificador estable del encantamiento y su nivel; no se usarían nombres traducidos como identificadores persistentes.
+- La lectura debe tolerar que el compuesto no exista, esté incompleto o provenga de una versión anterior, sin impedir que el arma se use.
+- Toda escritura debe conservar el compuesto NBT existente del objeto; nunca reemplazar el tag completo con solo nuestros datos.
+
+Esta es una propuesta de arquitectura, no una implementación ya probada. Antes de adoptarla definitivamente hay que verificar en runtime cómo TaCZ instala/extrae accesorios, cómo sincroniza los stacks y cómo se conserva el NBT en el ciclo completo de inventario, cofres, guardado y recarga.
+
+### Casos que quedan expresamente fuera de una conclusión estática
+
+- Que todas las armas de cualquier Gun Pack implementen `IGun` de la misma forma.
+- Que los encantamientos aplicados a una mira sobrevivan a instalarla, retirarla o sustituirla.
+- Que todos los proyectiles y tipos de impacto publiquen los mismos eventos.
+- Que la compilación del mod y la compatibilidad con modpacks estén verificadas.
+
+## Lista de verificación consolidada para cerrar la Fase 1
+
+- [x] Inspeccionar el JAR exacto y confirmar versión/metadata.
+- [x] Identificar firmas públicas de `IGun`, `GunFireEvent` y `EntityHurtByGunEvent`.
+- [x] Inspeccionar estáticamente las rutas de publicación de eventos conocidas y los lados lógicos.
+- [x] Confirmar el mecanismo genérico de detección por interfaz y los identificadores de arma.
+- [ ] Ejecutar pruebas reales de disparo, daño, cancelación y muerte en un mundo de prueba.
+- [ ] Confirmar el almacenamiento y la persistencia de datos propios en armas y miras/accesorios.
+- [ ] Verificar accesorios instalados/retirados y la compatibilidad de al menos un Gun Pack.
+- [ ] Definir y documentar el alcance de la primera versión y sus criterios de aceptación.
+
+Por tanto, la Fase 1 continúa **en progreso**. La investigación estática está avanzada, pero la puerta de entrada para la Fase 2 sigue siendo la verificación de los puntos de ejecución pendientes.
