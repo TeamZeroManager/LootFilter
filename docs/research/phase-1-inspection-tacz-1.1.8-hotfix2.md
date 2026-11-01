@@ -77,3 +77,15 @@ Existe `com.tacz.guns.entity.EntityKineticBullet`, una entidad de proyectil que 
 ## Alcance
 
 Este documento refleja la inspección estática del JAR suministrado. Todavía no certifica compatibilidad en ejecución ni constituye una compilación del mod.
+
+
+### Accesorios y catálogo de recursos
+
+La inspección del mismo JAR también confirma:
+
+- `AttachmentType` incluye `SCOPE`, `MUZZLE`, `STOCK`, `GRIP`, `LASER`, `EXTENDED_MAG` y `NONE`.
+- `TimelessAPI` expone métodos para consultar índices comunes de armas, munición, accesorios y bloques mediante `ResourceLocation`, así como métodos de índices de cliente para presentación.
+- La API de arma incluye métodos para consultar accesorios instalados y sus identificadores.
+
+Esto permite investigar compatibilidad con packs sin leer configuraciones personales: la clasificación se puede estudiar a partir de la API y de los identificadores registrados. Los métodos de índices del cliente no deben invocarse desde lógica de servidor dedicado sin verificar su lado de ejecución.
+
