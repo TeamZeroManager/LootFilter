@@ -161,3 +161,10 @@ Esta es una propuesta de arquitectura, no una implementación ya probada. Antes 
 - [ ] Definir y documentar el alcance de la primera versión y sus criterios de aceptación.
 
 Por tanto, la Fase 1 continúa **en progreso**. La investigación estática está avanzada, pero la puerta de entrada para la Fase 2 sigue siendo la verificación de los puntos de ejecución pendientes.
+### Detalle confirmado: almacenamiento de accesorios dentro del arma
+
+El bytecode de `GunItemDataAccessor` aclara que `installAttachment(gunStack, attachmentStack)` guarda una serialización del `ItemStack` completo del accesorio en un sub-compuesto del NBT del arma, usando una clave derivada de `AttachmentType.name()`. `getAttachment(...)` reconstruye un `ItemStack` desde ese compuesto; `getAttachmentTag(...)` devuelve el subtag interno del accesorio.
+
+Consecuencia: los datos propios guardados en el NBT del `ItemStack` de un accesorio podrían conservarse al instalarlo, porque TaCZ serializa el stack completo. Sin embargo, el ciclo de retirada, sustitución, sincronización y guardado debe probarse en runtime antes de prometer que los encantamientos de miras se conservan en todos los casos. No se debe escribir directamente en las claves de accesorio que usa TaCZ; nuestros datos deben vivir en su propio sub-compuesto.
+
+Este hallazgo refuerza la propuesta de mantener encantamientos de armas en el stack del arma y encantamientos de mira en el stack de la mira, con una clave NBT propia y lectura tolerante a datos ausentes.
