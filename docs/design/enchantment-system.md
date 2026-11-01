@@ -1,6 +1,8 @@
 # Fase 2 — Diseño del sistema de encantamientos
 
-**Estado: BORRADOR DE DISEÑO.** Este documento inicia el diseño funcional; las cifras de equilibrio y las combinaciones todavía no están aprobadas ni implementadas.
+**Estado: EN DISEÑO — dirección acordada; catálogo y números aún pendientes de aprobación final.**
+
+**Dirección elegida por el usuario:** híbrida (táctica + fantástica), con potencia equilibrada. Los encantamientos deben sentirse útiles y visibles sin convertir las armas en algo invencible ni borrar la identidad original de TaCZ.
 
 ## Objetivo
 
@@ -9,58 +11,97 @@ Diseñar un sistema de personalización para armas y miras de TaCZ que se sienta
 ## Principios de diseño
 
 1. **TaCZ sigue siendo responsable del arma.** Tacz Enchanting añade efectos; no reemplaza el sistema de disparo, recarga, munición ni accesorios de TaCZ.
-2. **Compatibilidad por capacidades y perfiles.** No asumir que el nombre o ID de un arma revela su categoría. Los perfiles deben poder ampliarse y las armas desconocidas deben recibir un comportamiento seguro.
-3. **Ventajas con contrapartidas.** Los encantamientos poderosos deben tener un coste, desventaja o restricción significativa.
-4. **Datos aislados.** Los datos propios se guardarán bajo el espacio de nombres taczenchanting, sin reemplazar el NBT de TaCZ ni el de otros mods.
-5. **Separación de objetivos.** Los encantamientos del arma y los de la mira son sistemas distintos, aunque compartan infraestructura.
-6. **Sin configuración obligatoria.** El mod debe funcionar con TaCZ y sus recursos normales; cualquier extensión futura debe ser opcional.
-7. **Seguro ante contenido desconocido.** Un arma, accesorio o entidad no reconocidos no deben provocar errores ni recibir bonificaciones arbitrarias.
+2. **Táctico + fantástico.** Combinar precisión, control y especialización con efectos como fuego, frío o electricidad, manteniendo una presentación sobria y coherente con TaCZ.
+3. **Equilibrio por contrapartidas.** Un efecto especial no debe ser una mejora gratuita: puede limitarse por probabilidad, duración, cadencia, consumo, precisión o condición de activación.
+4. **Compatibilidad por perfiles ampliables.** No asumir que el nombre o ID de un arma revela su categoría. Los perfiles se podrán extender y las armas desconocidas tendrán un comportamiento seguro.
+5. **Datos aislados.** Los datos propios se guardarán bajo el espacio de nombres `taczenchanting`, sin reemplazar el NBT de TaCZ ni el de otros mods.
+6. **Separación de objetivos.** Los encantamientos del arma y los de la mira son sistemas distintos, aunque compartan infraestructura.
+7. **Sin configuración obligatoria.** El mod debe funcionar con TaCZ y sus recursos normales; cualquier extensión futura debe ser opcional.
+8. **Seguro ante contenido desconocido.** Un arma, accesorio o entidad no reconocidos no deben provocar errores ni recibir bonificaciones arbitrarias.
 
 ## Reglas generales propuestas
 
-- Cada encantamiento tendrá un identificador estable, nombre traducible, nivel máximo, objetivo compatible y descripción de su ventaja y desventaja.
-- Los niveles aumentarán el efecto de forma controlada; no se debe asumir que duplicar el nivel duplica el poder.
+- Cada encantamiento tendrá identificador estable, nombre traducible, nivel máximo, objetivo compatible y descripción de su ventaja y contrapartida.
+- **Nivel máximo inicial propuesto: III** para la mayoría de encantamientos de armas. Un efecto que no escale de forma saludable podrá tener un máximo menor.
+- Los niveles aumentarán el efecto gradualmente; no se asumirá que duplicar el nivel duplica el poder.
 - Un arma solo podrá recibir encantamientos compatibles con su perfil y sus capacidades detectadas.
-- Las incompatibilidades serán explícitas y centralizadas, no repartidas entre condiciones improvisadas.
-- Retirar un encantamiento deberá eliminar solo sus propios datos y no alterar los demás encantamientos, el arma ni sus accesorios.
+- Las incompatibilidades serán explícitas y centralizadas.
+- Retirar un encantamiento eliminará solo sus propios datos y no alterará otros encantamientos, el arma ni sus accesorios.
 - La ausencia de datos de Tacz Enchanting se interpretará como un arma sin encantamientos.
 - Los efectos de combate se procesarán en el lado lógico del servidor para evitar aplicar daño dos veces. Los efectos puramente visuales podrán sincronizarse aparte.
-- No se definirá todavía un método de aplicación (mesa, receta u otro) hasta diseñar la mesa y los costes en las fases 6 y 7.
+- No se define todavía cómo se consiguen o aplican los encantamientos; eso se coordinará con las fases 6 y 7 (mesa y materiales/costes).
+- Ningún encantamiento debe saltarse las reglas de TaCZ sobre munición, recarga, accesorios o funcionamiento del arma.
 
 ## Catálogo inicial propuesto para armas
 
-Los siguientes nombres son ideas iniciales de la hoja de ruta, no una lista definitiva ni funciones ya implementadas.
+Este es un catálogo de diseño, no una lista implementada. Los números son límites de diseño tentativos para mantener una potencia equilibrada y se ajustarán tras pruebas.
 
-| Perfil de arma | Ideas de encantamientos | Dirección de diseño |
-| --- | --- | --- |
-| Pistolas | Ejecución, Penetración | Precisión táctica y utilidad contra objetivos resistentes, con límites claros |
-| Subfusiles | Adrenalina, Descarga eléctrica | Movilidad/ritmo de combate y control breve, evitando aturdimientos permanentes |
-| Fusiles de asalto | Incendiario, Sobrecarga | Daño elemental o ráfagas de potencia a cambio de una desventaja medible |
-| Francotiradores | Análisis anatómico, Ejecución | Recompensar impactos precisos sin crear multiplicadores descontrolados |
-| Escopetas | Impacto devastador, Congelación | Potencia a corta distancia y control temporal con alcance limitado |
-| Ametralladoras | Supresión, Perforación | Control de área y penetración con coste de precisión, movilidad o consumo |
+| Encantamiento | Perfil inicial | Efecto previsto | Contrapartida / límite | Niveles |
+| --- | --- | --- | --- | --- |
+| **Ejecución** | Armas de precisión; perfiles adicionales por decidir | Da una bonificación moderada contra objetivos ya debilitados; no debe ser una eliminación automática | No aumenta el daño general contra objetivos sanos; umbral y bonificación por definir | I–III |
+| **Penetración** | Armas cuyo perfil permita proyectiles perforantes | Permite atravesar ciertos objetivos o mitigar una parte limitada de la protección, solo si la ruta de impacto de TaCZ lo permite | Eficacia reducida por objetivo/material y límites estrictos; no prometer penetración universal hasta validar el motor | I–III |
+| **Adrenalina** | Subfusiles y perfiles móviles compatibles | Una baja o condición de combate puede conceder un impulso breve de movilidad o manejo | Duración breve, activación limitada y sin acumulación infinita | I–III |
+| **Descarga eléctrica** | Subfusiles u otras armas compatibles | Probabilidad baja y controlada de aplicar un efecto eléctrico breve al objetivo | Daño adicional pequeño o nulo; control de movimiento corto, con inmunidad temporal para evitar bloqueo repetido | I–III |
+| **Incendiario** | Fusiles de asalto y perfiles compatibles | Aplica una quemadura corta con daño total limitado | No debe mantener al objetivo ardiendo indefinidamente; posible coste de recursos o menor rendimiento en otra área | I–III |
+| **Sobrecarga** | Fusiles de asalto u otras armas compatibles | Disparos ocasionales potenciados con señal visual/audio legible | Ventana de activación limitada y contrapartida de manejo, precisión o consumo; nunca multiplicador constante | I–III |
+| **Análisis anatómico** | Francotiradores y armas de precisión | Tras apuntar o cumplir una condición, ofrece información limitada sobre el objetivo o mejora moderadamente un impacto preciso | Requiere preparación/precisión; no revela información a través de paredes ni garantiza daño crítico | I–III |
+| **Impacto devastador** | Escopetas y perfiles de corto alcance | Refuerza el impacto a corta distancia | La bonificación cae rápidamente con la distancia; no debe volver a las escopetas efectivas a cualquier alcance | I–III |
+| **Congelación** | Escopetas u otras armas compatibles | Aplica ralentización breve o acumulación de frío con un efecto visible | No congela indefinidamente ni inmoviliza jefes/entidades resistentes sin reglas explícitas | I–III |
+| **Supresión** | Ametralladoras y perfiles de fuego sostenido | Los impactos sostenidos pueden reducir brevemente la precisión o velocidad de un objetivo susceptible | Requiere impactos repetidos; efecto corto, no se acumula sin límite y puede no afectar entidades inmunes | I–III |
 
-**Nota de clasificación:** estas categorías serán perfiles configurables/extensibles, no una suposición sobre los campos internos de TaCZ. Si un arma de un Gun Pack no puede clasificarse con seguridad, conservará el funcionamiento normal de TaCZ y no recibirá efectos exclusivos de categoría.
+### Consideraciones sobre Penetración
+
+La hoja de ruta también menciona perforación para ametralladoras. Se tratará como un efecto compartido o una variante de perfil, no como dos encantamientos casi idénticos, hasta definir diferencias reales. No se implementará una penetración de entidades o bloques fingida si la API/ruta de impactos de TaCZ no la soporta de forma fiable.
+
+### Perfiles de arma y compatibilidad
+
+Los perfiles iniciales de diseño son pistola, subfusil, fusil de asalto, francotirador, escopeta y ametralladora. Son etiquetas del **mod**, no una afirmación de que TaCZ exponga una categoría interna universal equivalente.
+
+- La clasificación deberá ser extensible para Gun Packs.
+- No depender exclusivamente del nombre visible o de IDs concretos del pack por defecto.
+- Si una arma no puede clasificarse con seguridad, conservará el comportamiento normal de TaCZ y no recibirá encantamientos exclusivos de perfil hasta que exista una regla explícita.
+- Las reglas genéricas compartidas se podrán habilitar en armas desconocidas solo cuando su compatibilidad técnica se haya demostrado.
 
 ## Encantamientos compartidos
 
-Se podrá evaluar un pequeño grupo de encantamientos compartidos cuando el perfil del arma lo permita. No se aprobará uno como universal solo porque funcione técnicamente: debe tener sentido para cada tipo de arma y mantener sus contrapartidas.
+Candidatos por evaluar, sin aprobación definitiva:
+
+- **Estabilidad:** mejora moderadamente el control en condiciones definidas, a cambio de reducir otra característica como velocidad de movimiento o manejo.
+- **Recuperación:** ayuda a recuperar manejo tras disparar o tras una pausa; no debe aumentar directamente el daño.
+- **Reserva:** podría modificar de forma limitada una característica de munición solo si TaCZ permite hacerlo sin romper recargas, cargadores ni sincronización.
+
+Estos candidatos no se sumarán al catálogo definitivo hasta describir su efecto medible, su contrapartida y su compatibilidad.
 
 ## Encantamientos de miras
 
-Se tratarán por separado de los encantamientos del arma. El diseño deberá respetar el zoom y las funciones originales de cada mira. La información adicional al apuntar y los efectos visuales se especificarán antes de implementar el sistema de miras (fase 10).
+Se tratarán por separado de los encantamientos del arma. El diseño deberá respetar el zoom y las funciones originales de cada mira. Candidatos para la fase 10:
+
+- **Telémetro:** información aproximada de distancia, si puede mostrarse sin interferir con la interfaz de TaCZ.
+- **Enfoque:** mejora visual acotada al apuntar, sin alterar arbitrariamente el zoom original.
+- **Marcado:** indicador temporal y limitado sobre un objetivo visible, sin revelar entidades a través de paredes.
+
+Estos son conceptos preliminares. Se especificarán al llegar a la fase 10 y después de confirmar las posibilidades de la interfaz de miras.
+
+## Reglas de equilibrio iniciales
+
+1. Los encantamientos no deben aumentar el daño base de forma permanente y masiva.
+2. Los efectos de control (frío/electricidad/supresión) deben ser breves, tener límites de acumulación y respetar inmunidades o resistencias razonables.
+3. Los efectos por probabilidad deben mostrar una señal clara cuando se activan, si el diseño visual lo permite.
+4. Los efectos no se deben activar dos veces por el mismo disparo debido a eventos cliente/servidor.
+5. Un encantamiento no puede conceder simultáneamente todas las ventajas sin compromisos; las incompatibilidades se decidirán con el catálogo final.
+6. Los valores exactos de daño, probabilidad, duración, distancia y coste quedan pendientes de pruebas y no se presentan como cifras finales.
 
 ## Decisiones pendientes para cerrar la fase
 
-- Aprobar el catálogo inicial y descartar o renombrar ideas.
-- Definir nivel máximo por encantamiento.
-- Especificar numéricamente ventajas y desventajas.
-- Definir incompatibilidades entre encantamientos.
-- Determinar qué perfiles de armas pueden usar cada encantamiento.
+- Aprobar, renombrar o descartar cada encantamiento del catálogo inicial.
+- Confirmar niveles máximos por encantamiento.
+- Definir valores medibles para ventajas, desventajas, probabilidades, duraciones y distancias.
+- Definir incompatibilidades y combinaciones permitidas.
+- Aprobar qué perfiles admiten cada encantamiento.
 - Decidir cómo se obtienen/aplican los encantamientos en coordinación con las fases 6 y 7.
 - Definir el comportamiento de las armas desconocidas y de los Gun Packs.
-- Definir las reglas de los encantamientos de miras sin mezclarlas con las de armas.
+- Especificar el catálogo de miras al abordar la fase 10 sin mezclarlo con los efectos de armas.
 
 ## Criterio de finalización
 
-La fase se considerará completa cuando el catálogo, los niveles, las ventajas/desventajas, las incompatibilidades y las reglas de compatibilidad estén documentados y aprobados. Este documento por sí solo no significa que la fase esté terminada ni que exista código funcional.
+La fase se considerará completa cuando el catálogo, los niveles, las ventajas/desventajas, las incompatibilidades y las reglas de compatibilidad estén documentados y aprobados. La dirección híbrida y la potencia equilibrada ya están acordadas; el catálogo y los valores siguen siendo propuestas. Este documento no significa que exista código funcional ni que la fase esté cerrada.
