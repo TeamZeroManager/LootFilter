@@ -1,6 +1,6 @@
 # Phase 1 — Runtime validation checklist (TaCZ 1.1.8-hotfix2)
 
-**Status: PREPARED — not executed.** Static inspection of the JAR is not runtime validation. Phase 1 remains open until the required checks below have evidence.
+**Status: IN PROGRESS.** A clean client smoke test has passed for startup, new-world loading, basic weapon use, and save/reopen according to the user's report. Phase 1 remains open; data persistence internals, attachment lifecycle, event behavior, dedicated-server validation, and compatibility testing are still pending.
 
 ## Goal
 
@@ -8,24 +8,35 @@ Validate the TaCZ integration points and data-persistence assumptions in a contr
 
 ## Test environment record
 
-Fill this in for each run:
+### Run 1 — clean client smoke test
 
 - Minecraft: 1.20.1
-- Forge: exact version:
-- Java: 17 (record vendor/version):
+- Forge: 47.4.28
+- Java: 17.0.15 (Microsoft)
 - TaCZ: 1.1.8-hotfix2
-- Other mods: none for baseline; list exact versions for any compatibility run
-- Client or dedicated server:
-- World type / test save:
-- Result date:
-- Logs or screenshots:
+- Other mods: TaCZ was the only third-party content mod found in the instance's `mods` folder; Forge/Minecraft libraries and TaCZ's bundled libraries are expected.
+- Client or dedicated server: Client with integrated server
+- World type / test save: New test world ("Mundo nuevo")
+- Result date: 2026-11-01 (conversation record; exact local test date not independently verified)
+- Logs: user-provided `latest(2).log`
+- User-reported gameplay result: firing, reloading, and reopening the world worked.
+
+### Observed results
+
+- **PASS — client startup and world load:** the log identifies TaCZ 1.1.8-hotfix2, discovers the default `tacz_default_gun` pack, starts the integrated server, and loads the new world.
+- **PASS — save and clean disconnect:** the log records saving all dimensions and stopping without a crash stack trace.
+- **PASS — basic weapon smoke test (user-reported):** the user reports that firing, reloading, and reopening the world all work.
+- **LIMITATION — this is not a persistence-harness test:** the test did not add and inspect a mod-owned NBT tag, so it does not prove custom enchantment data would survive save/load or synchronization.
+- **PENDING — dedicated server:** no dedicated-server/client connection test has been run.
+- **PENDING — attachments and events:** attachment custom-data lifecycle and TaCZ event counts/sides have not been instrumented.
+- **NOTES:** TaCZ server config values were initialized/corrected to defaults in the new world's serverconfig. No startup-blocking issue was observed in this run.
 
 ## A. Baseline and loading
 
-- [ ] Launch a clean Forge 1.20.1 client with TaCZ only; reach the title screen and load a test world.
-- [ ] Confirm there are no missing-dependency, class-loading, or registry errors in latest.log.
+- [x] Launch a clean Forge 1.20.1 client with TaCZ only; reach the title screen and load a test world.
+- [x] Confirm there are no missing-dependency, class-loading, or registry errors in the new clean-world run that prevent startup or world loading.
 - [ ] Repeat on a dedicated server with a client connecting; confirm both sides start and connect cleanly.
-- [ ] Record exact Forge and Java versions, TaCZ version, and relevant log excerpts.
+- [x] Record exact Forge and Java versions, TaCZ version, and relevant log evidence.
 
 **Pass criteria:** no crash or relevant error during startup, world load, connection, or disconnect.
 
@@ -36,6 +47,8 @@ Fill this in for each run:
 - [ ] Check empty, loaded, and reloaded weapon states.
 - [ ] Check a non-gun item returns no gun interface.
 - [ ] Record any unusual weapons or packs that cannot be classified safely.
+
+**User smoke-test note:** firing and reloading worked, and the user reports the world could be reopened. This does not yet validate the interface-based detection or all weapon states.
 
 **Pass criteria:** detection is based on the TaCZ interface and fails safely for non-guns; unknown gun categories do not crash or silently receive category-specific behavior.
 
@@ -81,11 +94,12 @@ Use a temporary diagnostic harness or debugger; do not cancel events or modify g
 
 ## F. Compatibility smoke tests
 
-- [ ] Clean Forge + TaCZ baseline passes.
+- [x] Clean Forge + TaCZ client baseline passes for startup, new-world load, and basic user-reported weapon use.
 - [ ] TaCZ gun pack, if used, passes the representative gun checks.
 - [ ] Run the intended Otherworld: Dungeons & Dragons modpack with exact version and its required dependencies, without the new mod first, to establish a baseline.
 - [ ] Only after the baseline is stable, add the scaffold/new mod and compare startup, world load, weapon use, and logs.
 - [ ] Record failures already present in the unmodified modpack separately from regressions introduced by this mod.
+- [ ] Dedicated-server baseline passes.
 
 **Pass criteria:** no new crash or relevant regression attributable to Tacz Enchanting in the tested setup. A smoke test is not a guarantee of compatibility with every modpack.
 
