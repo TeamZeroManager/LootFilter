@@ -5,6 +5,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public final class EnchantingMenu extends AbstractContainerMenu {
     public EnchantingMenu(int containerId, Inventory inventory, FriendlyByteBuf data) {
@@ -17,6 +18,11 @@ public final class EnchantingMenu extends AbstractContainerMenu {
 
     public ItemStack getHeldGun(Player player) {
         return player.getMainHandItem();
+    }
+
+    @Override
+    public ItemStack quickMoveStack(Player player, int index) {
+        return ItemStack.EMPTY;
     }
 
     @Override
