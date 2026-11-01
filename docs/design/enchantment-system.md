@@ -105,3 +105,16 @@ Estos son conceptos preliminares. Se especificarán al llegar a la fase 10 y des
 ## Criterio de finalización
 
 La fase se considerará completa cuando el catálogo, los niveles, las ventajas/desventajas, las incompatibilidades y las reglas de compatibilidad estén documentados y aprobados. La dirección híbrida y la potencia equilibrada ya están acordadas; el catálogo y los valores siguen siendo propuestas. Este documento no significa que exista código funcional ni que la fase esté cerrada.
+
+
+## Implementación inicial en curso
+
+La rama `feature/phase-2-enchantment-core` contiene una primera base de código, todavía pendiente de compilación y prueba en juego:
+
+- Registro interno de definiciones con identificadores estables y nivel máximo.
+- Almacenamiento de niveles en el sub-compuesto `taczenchanting/enchantments` del NBT del objeto, sin sustituir otras claves.
+- Captura del nivel de Incendiario en el proyectil cinético de TaCZ al entrar al mundo del servidor, para que cambiar de arma durante el vuelo no cambie el efecto del disparo.
+- En el evento de impacto `EntityHurtByGunEvent.Pre`, Incendiario aplica fuego de forma determinista en el servidor a objetivos que no sean inmunes al fuego. Niveles I–III establecen una duración inicial de 2–4 segundos.
+- El acceso de jugador para conseguir o aplicar encantamientos aún no está implementado; se coordinará con las fases 6 y 7 de la hoja de ruta.
+
+Esta implementación es un primer corte técnico, no una declaración de compilación exitosa ni de compatibilidad universal. La integración inicial cubre `EntityKineticBullet` y debe ampliarse solo tras confirmar las rutas adicionales de impactos de TaCZ.
