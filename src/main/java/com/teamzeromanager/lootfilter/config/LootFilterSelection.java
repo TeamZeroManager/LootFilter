@@ -13,10 +13,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Stores client-side filter selections between game launches. */
+/** Stores disabled client-side filter entries. All registered items are enabled by default. */
 public final class LootFilterSelection {
     private static final Path FILE = FMLPaths.CONFIGDIR.get().resolve("lootfilter.properties");
-    private static final Set<String> ENABLED = new LinkedHashSet<>();
+    private static final Set<String> DISABLED = new LinkedHashSet<>();
     private static boolean loaded;
 
     private LootFilterSelection() {}
@@ -29,19 +29,11 @@ public final class LootFilterSelection {
         Properties properties = new Properties();
         try (Reader reader = Files.newBufferedReader(FILE)) {
             properties.load(reader);
-            String value = properties.getProperty("enabled", "");
+            String value = properties.getProperty("disabled", "");
             Arrays.stream(value.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .forEach(id -> {
-                        // Migrate selections created by the first UI version, where block and item IDs shared one key.
-                        if (id.startsWith("block:") || id.startsWith("item:")) {
-                            ENABLED.add(id);
-                        } else {
-                            ENABLED.add("block:" + id);
-                            ENABLED.add("item:" + id);
-                        }
-                    });
+                    .forEach(DISABLED::add);
         } catch (IOException exception) {
             System.err.println("[LootFilter] Could not read filter selections: " + exception.getMessage());
         }
@@ -49,33 +41,28 @@ public final class LootFilterSelection {
 
     public static synchronized boolean isEnabled(String selectionKey) {
         load();
-        return ENABLED.contains(selectionKey);
+        return !DISABLED.contains(selectionKey);
     }
 
-    public static synchronized boolean hasAnyEnabled() {
+    public static synchronized boolean isDisabled(String itemId, String blockId) {
         load();
-        return !ENABLED.isEmpty();
-    }
-
-    public static synchronized boolean isItemAllowed(String itemId, String blockId) {
-        load();
-        return ENABLED.contains("item:" + itemId)
-                || (blockId != null && ENABLED.contains("block:" + blockId));
+        return DISABLED.contains("item:" + itemId)
+                || (blockId != null && DISABLED.contains("block:" + blockId));
     }
 
     public static synchronized void toggle(String selectionKey) {
         load();
-        if (!ENABLED.add(selectionKey)) ENABLED.remove(selectionKey);
+        if (!DISABLED.add(selectionKey)) DISABLED.remove(selectionKey);
         save();
     }
 
     private static void save() {
         Properties properties = new Properties();
-        properties.setProperty("enabled", ENABLED.stream().sorted().collect(Collectors.joining(",")));
+        properties.setProperty("disabled", DISABLED.stream().sorted().collect(Collectors.joining(",")));
         try {
             Files.createDirectories(FILE.getParent());
             try (Writer writer = Files.newBufferedWriter(FILE)) {
-                properties.store(writer, "LootFilter enabled selection keys (block:<id>, item:<id>)");
+                properties.store(writer, "LootFilter disabled selection keys (block:<id>, item:<id>)");
             }
         } catch (IOException exception) {
             System.err.println("[LootFilter] Could not save filter selections: " + exception.getMessage());
