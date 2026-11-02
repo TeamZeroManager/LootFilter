@@ -8,6 +8,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -63,12 +64,12 @@ public final class LootFilterScreen extends Screen {
             for (Block block : BuiltInRegistries.BLOCK) {
                 Item item = block.asItem();
                 ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
-                if (item != Items.AIR && id != null) result.add(new Entry(id.toString(), new ItemStack(item)));
+                if (item != Items.AIR && id != null) result.add(new Entry(id.toString(), "block:" + id, new ItemStack(item)));
             }
         } else {
             for (Item item : BuiltInRegistries.ITEM) {
                 ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
-                if (item != Items.AIR && id != null) result.add(new Entry(id.toString(), new ItemStack(item)));
+                if (item != Items.AIR && id != null) result.add(new Entry(id.toString(), "item:" + id, new ItemStack(item)));
             }
         }
         return result;
@@ -93,7 +94,7 @@ public final class LootFilterScreen extends Screen {
             int slot = index - start;
             int x = left + (slot % COLUMNS) * SLOT_SIZE;
             int y = top + (slot / COLUMNS) * SLOT_SIZE;
-            boolean enabled = LootFilterSelection.isEnabled(entry.id());
+            boolean enabled = LootFilterSelection.isEnabled(entry.selectionKey());
             graphics.fill(x, y, x + 18, y + 18, enabled ? 0xAA287A36 : 0xAA555555);
             graphics.renderItem(entry.stack(), x + 1, y + 1);
             if (mouseX >= x && mouseX < x + 18 && mouseY >= y && mouseY < y + 18) {
@@ -115,7 +116,7 @@ public final class LootFilterScreen extends Screen {
                 int x = left + (slot % COLUMNS) * SLOT_SIZE;
                 int y = top + (slot / COLUMNS) * SLOT_SIZE;
                 if (mouseX >= x && mouseX < x + 18 && mouseY >= y && mouseY < y + 18) {
-                    LootFilterSelection.toggle(all.get(index).id());
+                    LootFilterSelection.toggle(all.get(index).selectionKey());
                     return true;
                 }
             }
@@ -129,5 +130,5 @@ public final class LootFilterScreen extends Screen {
     }
 
     private enum Category { BLOCKS, ITEMS }
-    private record Entry(String id, ItemStack stack) {}
+    private record Entry(String id, String selectionKey, ItemStack stack) {}
 }
