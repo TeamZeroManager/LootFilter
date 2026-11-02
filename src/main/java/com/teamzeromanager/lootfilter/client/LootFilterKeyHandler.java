@@ -3,7 +3,7 @@ package com.teamzeromanager.lootfilter.client;
 import com.teamzeromanager.lootfilter.LootFilter;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -12,10 +12,11 @@ public final class LootFilterKeyHandler {
     private LootFilterKeyHandler() {}
 
     @SubscribeEvent
-    public static void onKeyInput(InputEvent.Key event) {
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
         Minecraft minecraft = Minecraft.getInstance();
-        if (LootFilterClient.OPEN_FILTER.consumeClick() && minecraft.screen == null) {
-            minecraft.setScreen(new LootFilterScreen());
+        while (LootFilterClient.OPEN_FILTER.consumeClick()) {
+            if (minecraft.screen == null) minecraft.setScreen(new LootFilterScreen());
         }
     }
 }
