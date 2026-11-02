@@ -18,15 +18,20 @@ import java.util.List;
 
 public final class LootFilterScreen extends Screen {
     private static final int COLUMNS = 9;
-    private static final int ROWS = 4;
-    private static final int PAGE_SIZE = COLUMNS * ROWS;
+    private static final int PAGE_SIZE = COLUMNS * 4;
     private static final int SLOT_SIZE = 20;
 
-    private Category category = Category.BLOCKS;
-    private int page;
+    private final Category category;
+    private final int page;
 
     public LootFilterScreen() {
+        this(Category.BLOCKS, 0);
+    }
+
+    private LootFilterScreen(Category category, int page) {
         super(Component.literal("LootFilter"));
+        this.category = category;
+        this.page = Math.max(0, page);
     }
 
     @Override
@@ -36,7 +41,6 @@ public final class LootFilterScreen extends Screen {
                 .bounds(center - 104, 32, 100, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Items"), button -> open(Category.ITEMS, 0))
                 .bounds(center + 4, 32, 100, 20).build());
-
         addRenderableWidget(Button.builder(Component.literal("< Previous"), button -> open(category, Math.max(0, page - 1)))
                 .bounds(center - 104, height - 32, 100, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Next >"), button -> open(category, page + 1))
@@ -46,11 +50,7 @@ public final class LootFilterScreen extends Screen {
     }
 
     private void open(Category nextCategory, int nextPage) {
-        Minecraft.getInstance().setScreen(new LootFilterScreen());
-        LootFilterScreen screen = (LootFilterScreen) Minecraft.getInstance().screen;
-        screen.category = nextCategory;
-        screen.page = Math.max(0, nextPage);
-        screen.init(Minecraft.getInstance(), screen.width, screen.height);
+        Minecraft.getInstance().setScreen(new LootFilterScreen(nextCategory, nextPage));
     }
 
     private List<Entry> entries() {
@@ -76,8 +76,7 @@ public final class LootFilterScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(font, title, width / 2, 12, 0xFFFFFF);
         graphics.drawCenteredString(font,
-                Component.literal(category == Category.BLOCKS ? "Block filter" : "Item filter")
-                        .append(Component.literal("  •  Page " + (page + 1))),
+                Component.literal((category == Category.BLOCKS ? "Block filter" : "Item filter") + "  •  Page " + (page + 1)),
                 width / 2, 57, 0xDDDDDD);
 
         List<Entry> all = entries();
@@ -85,21 +84,18 @@ public final class LootFilterScreen extends Screen {
         int end = Math.min(all.size(), start + PAGE_SIZE);
         int left = width / 2 - (COLUMNS * SLOT_SIZE) / 2;
         int top = 80;
-
         for (int index = start; index < end; index++) {
             Entry entry = all.get(index);
             int slot = index - start;
             int x = left + (slot % COLUMNS) * SLOT_SIZE;
             int y = top + (slot / COLUMNS) * SLOT_SIZE;
             boolean enabled = LootFilterSelection.isEnabled(entry.id());
-            int color = enabled ? 0xAA287A36 : 0xAA555555;
-            graphics.fill(x, y, x + 18, y + 18, color);
+            graphics.fill(x, y, x + 18, y + 18, enabled ? 0xAA287A36 : 0xAA555555);
             graphics.renderItem(entry.stack(), x + 1, y + 1);
             if (mouseX >= x && mouseX < x + 18 && mouseY >= y && mouseY < y + 18) {
                 graphics.renderTooltip(font, Component.literal(entry.id()), mouseX, mouseY);
             }
         }
-
         graphics.drawCenteredString(font, "Green = enabled    Gray = disabled", width / 2, height - 70, 0xCCCCCC);
     }
 
