@@ -33,20 +33,39 @@ public final class LootFilterSelection {
             Arrays.stream(value.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .forEach(ENABLED::add);
+                    .forEach(id -> {
+                        // Migrate selections created by the first UI version, where block and item IDs shared one key.
+                        if (id.startsWith("block:") || id.startsWith("item:")) {
+                            ENABLED.add(id);
+                        } else {
+                            ENABLED.add("block:" + id);
+                            ENABLED.add("item:" + id);
+                        }
+                    });
         } catch (IOException exception) {
             System.err.println("[LootFilter] Could not read filter selections: " + exception.getMessage());
         }
     }
 
-    public static synchronized boolean isEnabled(String registryId) {
+    public static synchronized boolean isEnabled(String selectionKey) {
         load();
-        return ENABLED.contains(registryId);
+        return ENABLED.contains(selectionKey);
     }
 
-    public static synchronized void toggle(String registryId) {
+    public static synchronized boolean hasAnyEnabled() {
         load();
-        if (!ENABLED.add(registryId)) ENABLED.remove(registryId);
+        return !ENABLED.isEmpty();
+    }
+
+    public static synchronized boolean isItemAllowed(String itemId, String blockId) {
+        load();
+        return ENABLED.contains("item:" + itemId)
+                || (blockId != null && ENABLED.contains("block:" + blockId));
+    }
+
+    public static synchronized void toggle(String selectionKey) {
+        load();
+        if (!ENABLED.add(selectionKey)) ENABLED.remove(selectionKey);
         save();
     }
 
@@ -56,7 +75,7 @@ public final class LootFilterSelection {
         try {
             Files.createDirectories(FILE.getParent());
             try (Writer writer = Files.newBufferedWriter(FILE)) {
-                properties.store(writer, "LootFilter enabled registry IDs");
+                properties.store(writer, "LootFilter enabled selection keys (block:<id>, item:<id>)");
             }
         } catch (IOException exception) {
             System.err.println("[LootFilter] Could not save filter selections: " + exception.getMessage());
