@@ -23,7 +23,7 @@ import java.util.Locale;
 public final class LootFilterScreen extends Screen {
     private static final int COLUMNS = 9;
     private static final int PAGE_SIZE = COLUMNS * 4;
-    private static final int SLOT_SIZE = 20;
+    private static final int SLOT_SIZE = 24;
     private static final int GRID_TOP = 100;
     private static final int NAV_BUTTON_WIDTH = 80;
     private static final int NAV_BUTTON_GAP = 8;
@@ -90,7 +90,7 @@ public final class LootFilterScreen extends Screen {
                     .bounds(doneX, navY, NAV_BUTTON_WIDTH, 20).build());
         } else {
             addRenderableWidget(Button.builder(Component.literal("< Categories"), button -> open(null, 0, false))
-                    .bounds(center - 104, 32, 100, 20).build());
+                    .bounds(center - 110, 24, 100, 20).build());
             addRenderableWidget(Button.builder(Component.literal("Previous"), button -> open(category, Math.max(0, page - 1), true))
                     .bounds(leftNavX, navY, NAV_BUTTON_WIDTH, 20).build());
             addRenderableWidget(Button.builder(Component.literal("Next"), button -> open(category, Math.min(page + 1, maxPage()), true))
@@ -205,9 +205,9 @@ public final class LootFilterScreen extends Screen {
             Entry entry = all.get(index);
             int slot = index - start, x = left + (slot % COLUMNS) * SLOT_SIZE, y = GRID_TOP + (slot / COLUMNS) * SLOT_SIZE;
             boolean enabled = LootFilterSelection.isEnabled(entry.selectionKey());
-            graphics.fill(x, y, x + 18, y + 18, enabled ? 0xAA287A36 : 0xAA555555);
-            graphics.renderItem(entry.stack(), x + 1, y + 1);
-            if (mouseX >= x && mouseX < x + 18 && mouseY >= y && mouseY < y + 18) {
+            graphics.fill(x, y, x + 22, y + 22, enabled ? 0xAA287A36 : 0xAA555555);
+            graphics.renderItem(entry.stack(), x + 3, y + 3);
+            if (mouseX >= x && mouseX < x + 22 && mouseY >= y && mouseY < y + 22) {
                 graphics.renderTooltip(font, Component.literal(displayName(entry.id())), mouseX, mouseY);
             }
         }
@@ -221,7 +221,7 @@ public final class LootFilterScreen extends Screen {
             int start = page * PAGE_SIZE, left = width / 2 - (COLUMNS * SLOT_SIZE) / 2;
             for (int index = start; index < Math.min(all.size(), start + PAGE_SIZE); index++) {
                 int slot = index - start, x = left + (slot % COLUMNS) * SLOT_SIZE, y = GRID_TOP + (slot / COLUMNS) * SLOT_SIZE;
-                if (mouseX >= x && mouseX < x + 18 && mouseY >= y && mouseY < y + 18) {
+                if (mouseX >= x && mouseX < x + 22 && mouseY >= y && mouseY < y + 22) {
                     LootFilterSelection.toggle(all.get(index).selectionKey());
                     return true;
                 }
