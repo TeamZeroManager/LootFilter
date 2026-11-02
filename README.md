@@ -1,6 +1,6 @@
 # LootFilter
 
-A Minecraft **1.20.1 Forge** mod foundation for configuring which blocks and items are eligible for automatic collection.
+A Minecraft **1.20.1 Forge** mod for configuring which blocks and items are allowed to be picked up from the ground.
 
 ## Requirements
 
@@ -8,18 +8,22 @@ A Minecraft **1.20.1 Forge** mod foundation for configuring which blocks and ite
 - Minecraft Forge 47.x
 - Java 17
 
-## Current foundation
+## Current features
 
-- LootFilter mod metadata and ID
-- Client keybind (`O`) to open the filter screen
-- Blocks and items are populated from the live Minecraft registries
-- Grid-based category screen with enabled/disabled visual states and pagination
-- Per-client selection persistence in `config/lootfilter.properties`
+- Press `O` to open the filter screen.
+- Blocks and items are populated from Minecraft's registries.
+- Separate Blocks and Items selections, a 9-by-4 grid, pagination, tooltips, and green/gray enabled states.
+- Selections persist in `config/lootfilter.properties`.
+- When at least one entry is enabled, only enabled items (or enabled block-items) can be picked up from the ground. Disabled drops remain on the ground.
+- When no entries are enabled, vanilla pickup behavior is unchanged.
+- Existing unprefixed selections from the initial UI build are migrated on load.
+
+## Important notes
+
+- The current pickup rule filters normal ground-item pickup; it does not pull items from a distance.
+- This first implementation uses the local config file for its allow-list. Multiplayer servers may need server-side configuration/network synchronization before the filter can behave consistently for every player.
+- Please test in a disposable world first, especially after enabling a small allow-list: all unselected drops will be blocked while at least one selection is active.
 
 ## Build
 
 Run `gradle build` with Java 17 installed. The mod JAR is generated in `build/libs/`.
-
-## Status
-
-This commit replaces the old TaCZ Enchanting scaffold with the LootFilter foundation. The GUI and saved selections are the starting point; the actual automatic-pickup behavior and in-game testing still need to be implemented and validated.
