@@ -43,7 +43,7 @@ public final class LootFilterScreen extends Screen {
                 .bounds(center + 4, 32, 100, 20).build());
         addRenderableWidget(Button.builder(Component.literal("< Previous"), button -> open(category, Math.max(0, page - 1)))
                 .bounds(center - 104, height - 32, 100, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Next >"), button -> open(category, page + 1))
+        addRenderableWidget(Button.builder(Component.literal("Next >"), button -> open(category, Math.min(page + 1, maxPage())))
                 .bounds(center + 4, height - 32, 100, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
                 .bounds(center - 40, height - 56, 80, 20).build());
@@ -51,6 +51,10 @@ public final class LootFilterScreen extends Screen {
 
     private void open(Category nextCategory, int nextPage) {
         Minecraft.getInstance().setScreen(new LootFilterScreen(nextCategory, nextPage));
+    }
+
+    private int maxPage() {
+        return Math.max(0, (entries().size() - 1) / PAGE_SIZE);
     }
 
     private List<Entry> entries() {
@@ -76,7 +80,7 @@ public final class LootFilterScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(font, title, width / 2, 12, 0xFFFFFF);
         graphics.drawCenteredString(font,
-                Component.literal((category == Category.BLOCKS ? "Block filter" : "Item filter") + "  •  Page " + (page + 1)),
+                Component.literal((category == Category.BLOCKS ? "Block filter" : "Item filter") + "  •  Page " + (page + 1) + " / " + (maxPage() + 1)),
                 width / 2, 57, 0xDDDDDD);
 
         List<Entry> all = entries();
