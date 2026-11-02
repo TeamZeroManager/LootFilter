@@ -72,14 +72,14 @@ public final class LootFilterScreen extends Screen {
                 categoryButtons.add(categoryButton);
                 addRenderableWidget(categoryButton);
             }
-            if (!searchQuery.isBlank()) {
-                searchPrevious = Button.builder(Component.literal("< Previous"), button -> open(null, Math.max(0, page - 1), false))
-                        .bounds(center - 104, height - 32, 100, 20).build();
-                searchNext = Button.builder(Component.literal("Next >"), button -> open(null, Math.min(page + 1, maxPage()), false))
-                        .bounds(center + 4, height - 32, 100, 20).build();
-                addRenderableWidget(searchPrevious);
-                addRenderableWidget(searchNext);
-            }
+            searchPrevious = Button.builder(Component.literal("< Previous"), button -> open(null, Math.max(0, page - 1), false))
+                    .bounds(center - 104, height - 32, 100, 20).build();
+            searchNext = Button.builder(Component.literal("Next >"), button -> open(null, Math.min(page + 1, maxPage()), false))
+                    .bounds(center + 4, height - 32, 100, 20).build();
+            searchPrevious.visible = !searchQuery.isBlank();
+            searchNext.visible = !searchQuery.isBlank();
+            addRenderableWidget(searchPrevious);
+            addRenderableWidget(searchNext);
             addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
                     .bounds(center - 40, height - 28, 80, 20).build());
         } else {
