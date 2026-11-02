@@ -1,34 +1,25 @@
-# Tacz Enchanting
+# LootFilter
 
-A Minecraft **1.20.1 Forge** add-on focused on custom enchantments for **Timeless and Classics Zero (TaCZ)** firearms.
+A Minecraft **1.20.1 Forge** mod foundation for configuring which blocks and items are eligible for automatic collection.
 
 ## Requirements
 
 - Minecraft 1.20.1
 - Minecraft Forge 47.x
-- TaCZ installed on both client and server
-
-## Development
-
 - Java 17
-- ForgeGradle 6.x
 
-The initial project scaffold is in place. Custom enchantments and their gameplay effects will be added incrementally, then tested in a Forge development client and server.
+## Current foundation
+
+- LootFilter mod metadata and ID
+- Client keybind (`O`) to open the filter screen
+- Blocks and items are populated from the live Minecraft registries
+- Grid-based category screen with enabled/disabled visual states and pagination
+- Per-client selection persistence in `config/lootfilter.properties`
 
 ## Build
 
-On a machine with Java 17 and Gradle available:
+Run `gradle build` with Java 17 installed. The mod JAR is generated in `build/libs/`.
 
-```bash
-gradle build
-```
+## Status
 
-The built mod JAR will be in `build/libs/`.
-
-## Current status
-
-- [x] Forge 1.20.1 project scaffold
-- [x] Mod metadata and enchantment registry
-- [ ] Register the first enchantment
-- [ ] Hook enchantment effects into TaCZ weapon/projectile gameplay
-- [ ] Add automated build and runtime testing
+This commit replaces the old TaCZ Enchanting scaffold with the LootFilter foundation. The GUI and saved selections are the starting point; the actual automatic-pickup behavior and in-game testing still need to be implemented and validated.
