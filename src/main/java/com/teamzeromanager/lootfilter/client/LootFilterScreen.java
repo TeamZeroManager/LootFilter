@@ -4,6 +4,7 @@ import com.teamzeromanager.lootfilter.config.LootFilterSelection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -23,7 +24,9 @@ public final class LootFilterScreen extends Screen {
     private static final int COLUMNS = 9;
     private static final int PAGE_SIZE = COLUMNS * 4;
     private static final int SLOT_SIZE = 20;
-    private static final int GRID_TOP = 112;
+    private static final int GRID_TOP = 82;
+    private static String searchQuery = "";
+    private EditBox searchBox;
 
     private final Category category;
     private final int page;
@@ -41,10 +44,15 @@ public final class LootFilterScreen extends Screen {
     @Override
     protected void init() {
         int center = width / 2;
+        searchBox = new EditBox(font, center - 110, 48, 220, 20, Component.literal("Search items"));
+        searchBox.setHint(Component.literal("Search blocks and items..."));
+        searchBox.setValue(searchQuery);
+        searchBox.setResponder(value -> searchQuery = value);
+        addRenderableWidget(searchBox);
         if (!showingEntries) {
             int buttonWidth = 126, buttonHeight = 20, gap = 6, columns = 3;
             int totalWidth = columns * buttonWidth + (columns - 1) * gap;
-            int left = (width - totalWidth) / 2, top = 42;
+            int left = (width - totalWidth) / 2, top = 76;
             Category[] categories = Category.values();
             for (int i = 0; i < categories.length; i++) {
                 Category entry = categories[i];
@@ -75,8 +83,22 @@ public final class LootFilterScreen extends Screen {
 
     private List<Entry> entries() {
         List<Entry> result = new ArrayList<>();
-        if (category == null) return result;
-        if (category.blockCategory) {
+        String query = searchQuery.trim().toLowerCase(Locale.ROOT);
+        boolean globalSearch = !query.isEmpty();
+        if (category == null && !globalSearch) return result;
+        if (globalSearch) {
+            for (Block block : BuiltInRegistries.BLOCK) {
+                ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+                Item item = block.asItem();
+                if (id == null || item == Items.AIR || !matchesSearch(id, query)) continue;
+                result.add(new Entry(id.toString(), "block:" + id, new ItemStack(item)));
+            }
+            for (Item item : BuiltInRegistries.ITEM) {
+                ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                if (id == null || item == Items.AIR || item instanceof BlockItem || !matchesSearch(id, query)) continue;
+                result.add(new Entry(id.toString(), "item:" + id, new ItemStack(item)));
+            }
+        } else if (category.blockCategory) {
             for (Block block : BuiltInRegistries.BLOCK) {
                 Item item = block.asItem();
                 ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
@@ -92,6 +114,25 @@ public final class LootFilterScreen extends Screen {
         }
         result.sort(Comparator.comparing(Entry::id));
         return result;
+    }
+
+    private static boolean matchesSearch(ResourceLocation id, String query) {
+        return id.getPath().replace('_', ' ').toLowerCase(Locale.ROOT).contains(query)
+                || id.toString().toLowerCase(Locale.ROOT).contains(query);
+    }
+
+    private static String displayName(String id) {
+        ResourceLocation location = ResourceLocation.tryParse(id);
+        if (location == null) return id;
+        String[] words = location.getPath().replace('_', ' ').split(" ");
+        StringBuilder name = new StringBuilder();
+        for (String word : words) {
+            if (word.isEmpty()) continue;
+            if (name.length() > 0) name.append(' ');
+            name.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+        }
+        if (!location.getNamespace().equals("minecraft")) name.append(" (").append(location.getNamespace()).append(')');
+        return name.toString();
     }
 
     private static Category classifyBlock(String path) {
@@ -126,12 +167,13 @@ public final class LootFilterScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(font, title, width / 2, 12, 0xFFFFFF);
         if (!showingEntries) {
-            graphics.drawCenteredString(font, "Choose a category", width / 2, 28, 0xDDDDDD);
-            graphics.drawCenteredString(font, "All items are enabled by default", width / 2, height - 44, 0x80E080);
-            return;
+            graphics.drawCenteredString(font, searchQuery.isBlank() ? "Choose a category or search" : "Search results", width / 2, 28, 0xDDDDDD);
+            graphics.drawCenteredString(font, "All items are enabled by default", width / 2, height - 24, 0x80E080);
+            if (searchQuery.isBlank()) return;
         }
         List<Entry> all = entries();
-        graphics.drawCenteredString(font, Component.literal(category.label + "  •  Page " + (page + 1) + " / " + (maxPage() + 1)), width / 2, 57, 0xDDDDDD);
+        String heading = !searchQuery.isBlank() ? "Search: " + searchQuery : category.label;
+        graphics.drawCenteredString(font, Component.literal(heading + "  •  Page " + (page + 1) + " / " + (maxPage() + 1)), width / 2, 72, 0xDDDDDD);
         int start = page * PAGE_SIZE, end = Math.min(all.size(), start + PAGE_SIZE);
         int left = width / 2 - (COLUMNS * SLOT_SIZE) / 2;
         for (int index = start; index < end; index++) {
@@ -141,7 +183,7 @@ public final class LootFilterScreen extends Screen {
             graphics.fill(x, y, x + 18, y + 18, enabled ? 0xAA287A36 : 0xAA555555);
             graphics.renderItem(entry.stack(), x + 1, y + 1);
             if (mouseX >= x && mouseX < x + 18 && mouseY >= y && mouseY < y + 18) {
-                graphics.renderTooltip(font, Component.literal(entry.id()), mouseX, mouseY);
+                graphics.renderTooltip(font, Component.literal(displayName(entry.id())), mouseX, mouseY);
             }
         }
         graphics.drawCenteredString(font, "Green = enabled    Gray = disabled", width / 2, height - 70, 0xCCCCCC);
@@ -149,7 +191,7 @@ public final class LootFilterScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (showingEntries && button == 0) {
+        if ((showingEntries || !searchQuery.isBlank()) && button == 0) {
             List<Entry> all = entries();
             int start = page * PAGE_SIZE, left = width / 2 - (COLUMNS * SLOT_SIZE) / 2;
             for (int index = start; index < Math.min(all.size(), start + PAGE_SIZE); index++) {
@@ -161,6 +203,18 @@ public final class LootFilterScreen extends Screen {
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (searchBox != null && searchBox.isFocused() && searchBox.keyPressed(keyCode, scanCode, modifiers)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (searchBox != null && searchBox.isFocused() && searchBox.charTyped(codePoint, modifiers)) return true;
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override public boolean isPauseScreen() { return false; }
