@@ -25,6 +25,8 @@ public final class LootFilterScreen extends Screen {
     private static final int PAGE_SIZE = COLUMNS * 4;
     private static final int SLOT_SIZE = 20;
     private static final int GRID_TOP = 100;
+    private static final int NAV_BUTTON_WIDTH = 80;
+    private static final int NAV_BUTTON_GAP = 8;
     private static String searchQuery = "";
     private EditBox searchBox;
     private final List<Button> categoryButtons = new ArrayList<>();
@@ -58,6 +60,10 @@ public final class LootFilterScreen extends Screen {
             if (searchNext != null) searchNext.visible = searching;
         });
         addRenderableWidget(searchBox);
+        int navY = height - 32;
+        int leftNavX = center - (NAV_BUTTON_WIDTH * 3 + NAV_BUTTON_GAP * 2) / 2;
+        int doneX = leftNavX + NAV_BUTTON_WIDTH + NAV_BUTTON_GAP;
+        int rightNavX = doneX + NAV_BUTTON_WIDTH + NAV_BUTTON_GAP;
         if (!showingEntries) {
             int buttonWidth = 126, buttonHeight = 20, gap = 6, columns = 3;
             int totalWidth = columns * buttonWidth + (columns - 1) * gap;
@@ -72,25 +78,25 @@ public final class LootFilterScreen extends Screen {
                 categoryButtons.add(categoryButton);
                 addRenderableWidget(categoryButton);
             }
-            searchPrevious = Button.builder(Component.literal("< Previous"), button -> open(null, Math.max(0, page - 1), false))
-                    .bounds(center - 104, height - 32, 100, 20).build();
-            searchNext = Button.builder(Component.literal("Next >"), button -> open(null, Math.min(page + 1, maxPage()), false))
-                    .bounds(center + 4, height - 32, 100, 20).build();
+            searchPrevious = Button.builder(Component.literal("Previous"), button -> open(null, Math.max(0, page - 1), false))
+                    .bounds(leftNavX, navY, NAV_BUTTON_WIDTH, 20).build();
+            searchNext = Button.builder(Component.literal("Next"), button -> open(null, Math.min(page + 1, maxPage()), false))
+                    .bounds(rightNavX, navY, NAV_BUTTON_WIDTH, 20).build();
             searchPrevious.visible = !searchQuery.isBlank();
             searchNext.visible = !searchQuery.isBlank();
             addRenderableWidget(searchPrevious);
             addRenderableWidget(searchNext);
             addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
-                    .bounds(center - 40, height - 28, 80, 20).build());
+                    .bounds(doneX, navY, NAV_BUTTON_WIDTH, 20).build());
         } else {
             addRenderableWidget(Button.builder(Component.literal("< Categories"), button -> open(null, 0, false))
                     .bounds(center - 104, 32, 100, 20).build());
-            addRenderableWidget(Button.builder(Component.literal("< Previous"), button -> open(category, Math.max(0, page - 1), true))
-                    .bounds(center - 104, height - 32, 100, 20).build());
-            addRenderableWidget(Button.builder(Component.literal("Next >"), button -> open(category, Math.min(page + 1, maxPage()), true))
-                    .bounds(center + 4, height - 32, 100, 20).build());
+            addRenderableWidget(Button.builder(Component.literal("Previous"), button -> open(category, Math.max(0, page - 1), true))
+                    .bounds(leftNavX, navY, NAV_BUTTON_WIDTH, 20).build());
+            addRenderableWidget(Button.builder(Component.literal("Next"), button -> open(category, Math.min(page + 1, maxPage()), true))
+                    .bounds(rightNavX, navY, NAV_BUTTON_WIDTH, 20).build());
             addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
-                    .bounds(center - 40, height - 56, 80, 20).build());
+                    .bounds(doneX, navY, NAV_BUTTON_WIDTH, 20).build());
         }
     }
 
