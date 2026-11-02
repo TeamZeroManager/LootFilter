@@ -49,6 +49,9 @@ public final class LootFilterScreen extends Screen {
     @Override
     protected void init() {
         int center = width / 2;
+        categoryButtons.clear();
+        searchPrevious = null;
+        searchNext = null;
         searchBox = new EditBox(font, center - 110, 48, 220, 20, Component.literal("Search items"));
         searchBox.setHint(Component.literal("Search blocks and items..."));
         searchBox.setValue(searchQuery);
@@ -60,6 +63,8 @@ public final class LootFilterScreen extends Screen {
             if (searchNext != null) searchNext.visible = searching;
         });
         addRenderableWidget(searchBox);
+        // Apply the current query immediately so reopening the screen keeps the UI consistent.
+        boolean initialSearch = !searchQuery.isBlank();
         int navY = height - 32;
         int leftNavX = center - (NAV_BUTTON_WIDTH * 3 + NAV_BUTTON_GAP * 2) / 2;
         int doneX = leftNavX + NAV_BUTTON_WIDTH + NAV_BUTTON_GAP;
@@ -82,8 +87,8 @@ public final class LootFilterScreen extends Screen {
                     .bounds(leftNavX, navY, NAV_BUTTON_WIDTH, 20).build();
             searchNext = Button.builder(Component.literal("Next"), button -> open(null, Math.min(page + 1, maxPage()), false))
                     .bounds(rightNavX, navY, NAV_BUTTON_WIDTH, 20).build();
-            searchPrevious.visible = !searchQuery.isBlank();
-            searchNext.visible = !searchQuery.isBlank();
+            searchPrevious.visible = initialSearch;
+            searchNext.visible = initialSearch;
             addRenderableWidget(searchPrevious);
             addRenderableWidget(searchNext);
             addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
@@ -189,29 +194,49 @@ public final class LootFilterScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics);
+        int panelLeft = Math.max(4, width / 2 - 210);
+        int panelRight = Math.min(width - 4, width / 2 + 210);
+        graphics.fill(panelLeft, 5, panelRight, height - 5, 0xE811151D);
+        graphics.fill(panelLeft, 5, panelRight, 7, 0xFF35C979);
+        graphics.fill(panelLeft, 7, panelLeft + 1, height - 5, 0xFF303B49);
+        graphics.fill(panelRight - 1, 7, panelRight, height - 5, 0xFF303B49);
         super.render(graphics, mouseX, mouseY, partialTick);
-        graphics.drawCenteredString(font, title, width / 2, 12, 0xFFFFFF);
+        graphics.drawCenteredString(font, title, width / 2, 12, 0xFFF2F6FA);
         if (!showingEntries && searchQuery.isBlank()) {
-            graphics.drawCenteredString(font, "Choose a category or search", width / 2, 28, 0xDDDDDD);
-            graphics.drawCenteredString(font, "All items are enabled by default", width / 2, height - 24, 0x80E080);
+            graphics.drawCenteredString(font, "CHOOSE A CATEGORY OR SEARCH", width / 2, 28, 0xFFB8C5D4);
+            graphics.drawCenteredString(font, "All items are enabled by default", width / 2, height - 24, 0xFF65E69A);
             return;
         }
         List<Entry> all = entries();
         String heading = !searchQuery.isBlank() ? "Search: " + searchQuery : category.label;
-        graphics.drawCenteredString(font, Component.literal(heading + "  •  Page " + (page + 1) + " / " + (maxPage() + 1)), width / 2, 72, 0xDDDDDD);
+        graphics.drawCenteredString(font, Component.literal(heading), width / 2, 72, 0xFFF2F6FA);
+        graphics.drawCenteredString(font, Component.literal("PAGE " + (page + 1) + " / " + (maxPage() + 1)), width / 2, 84, 0xFF8D9CAF);
         int start = page * PAGE_SIZE, end = Math.min(all.size(), start + PAGE_SIZE);
         int left = width / 2 - (COLUMNS * SLOT_SIZE) / 2;
         for (int index = start; index < end; index++) {
             Entry entry = all.get(index);
             int slot = index - start, x = left + (slot % COLUMNS) * SLOT_SIZE, y = GRID_TOP + (slot / COLUMNS) * SLOT_SIZE;
             boolean enabled = LootFilterSelection.isEnabled(entry.selectionKey());
-            graphics.fill(x, y, x + 22, y + 22, enabled ? 0xAA287A36 : 0xAA555555);
+            int slotFill = enabled ? 0xFF1C382D : 0xFF252B34;
+            int slotBorder = enabled ? 0xFF3FAD70 : 0xFF414B59;
+            graphics.fill(x, y, x + 22, y + 22, slotFill);
+            graphics.fill(x, y, x + 22, y + 1, slotBorder);
+            graphics.fill(x, y + 21, x + 22, y + 22, slotBorder);
+            graphics.fill(x, y, x + 1, y + 22, slotBorder);
+            graphics.fill(x + 21, y, x + 22, y + 22, slotBorder);
             graphics.renderItem(entry.stack(), x + 3, y + 3);
             if (mouseX >= x && mouseX < x + 22 && mouseY >= y && mouseY < y + 22) {
                 graphics.renderTooltip(font, Component.literal(displayName(entry.id())), mouseX, mouseY);
             }
         }
-        graphics.drawCenteredString(font, "Green = enabled    Gray = disabled", width / 2, height - 70, 0xCCCCCC);
+        if (all.isEmpty()) {
+            graphics.drawCenteredString(font, "No matching items found", width / 2, GRID_TOP + 28, 0xFFFFB86B);
+            graphics.drawCenteredString(font, "Try another name or item ID", width / 2, GRID_TOP + 42, 0xFF9AA8B8);
+        }
+        graphics.fill(width / 2 - 115, height - 58, width / 2 - 111, height - 54, 0xFF3FAD70);
+        graphics.drawString(font, "Enabled", width / 2 - 107, height - 59, 0xFFB7F4CD, false);
+        graphics.fill(width / 2 + 3, height - 58, width / 2 + 7, height - 54, 0xFF414B59);
+        graphics.drawString(font, "Disabled", width / 2 + 11, height - 59, 0xFFB7C0CC, false);
     }
 
     @Override
