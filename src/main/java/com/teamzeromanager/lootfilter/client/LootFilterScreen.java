@@ -54,12 +54,18 @@ public final class LootFilterScreen extends Screen {
             int totalWidth = columns * buttonWidth + (columns - 1) * gap;
             int left = (width - totalWidth) / 2, top = 76;
             Category[] categories = Category.values();
-            for (int i = 0; i < categories.length; i++) {
+            for (int i = 0; searchQuery.isBlank() && i < categories.length; i++) {
                 Category entry = categories[i];
                 int x = left + (i % columns) * (buttonWidth + gap);
                 int y = top + (i / columns) * (buttonHeight + 5);
                 addRenderableWidget(Button.builder(Component.literal(entry.label),
                         button -> open(entry, 0, true)).bounds(x, y, buttonWidth, buttonHeight).build());
+            }
+            if (!searchQuery.isBlank()) {
+                addRenderableWidget(Button.builder(Component.literal("< Previous"), button -> open(null, Math.max(0, page - 1), false))
+                        .bounds(center - 104, height - 32, 100, 20).build());
+                addRenderableWidget(Button.builder(Component.literal("Next >"), button -> open(null, Math.min(page + 1, maxPage()), false))
+                        .bounds(center + 4, height - 32, 100, 20).build());
             }
             addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
                     .bounds(center - 40, height - 28, 80, 20).build());
@@ -166,10 +172,10 @@ public final class LootFilterScreen extends Screen {
         renderBackground(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(font, title, width / 2, 12, 0xFFFFFF);
-        if (!showingEntries) {
-            graphics.drawCenteredString(font, searchQuery.isBlank() ? "Choose a category or search" : "Search results", width / 2, 28, 0xDDDDDD);
+        if (!showingEntries && searchQuery.isBlank()) {
+            graphics.drawCenteredString(font, "Choose a category or search", width / 2, 28, 0xDDDDDD);
             graphics.drawCenteredString(font, "All items are enabled by default", width / 2, height - 24, 0x80E080);
-            if (searchQuery.isBlank()) return;
+            return;
         }
         List<Entry> all = entries();
         String heading = !searchQuery.isBlank() ? "Search: " + searchQuery : category.label;
