@@ -52,8 +52,8 @@ public final class LootFilterScreen extends Screen {
         categoryButtons.clear();
         searchPrevious = null;
         searchNext = null;
-        searchBox = new EditBox(font, center - 110, 48, 220, 20, Component.literal("Search items"));
-        searchBox.setHint(Component.literal("Search blocks and items..."));
+        searchBox = new EditBox(font, center - 110, 48, 220, 20, Component.translatable("screen.lootfilter.search"));
+        searchBox.setHint(Component.translatable("screen.lootfilter.search_hint"));
         searchBox.setValue(searchQuery);
         searchBox.setResponder(value -> {
             searchQuery = value;
@@ -78,29 +78,29 @@ public final class LootFilterScreen extends Screen {
                 Category entry = categories[i];
                 int x = left + (i % columns) * (buttonWidth + gap);
                 int y = top + (i / columns) * (buttonHeight + 5);
-                Button categoryButton = Button.builder(Component.literal(entry.label),
+                Button categoryButton = Button.builder(Component.translatable(entry.translationKey),
                         button -> open(entry, 0, true)).bounds(x, y, buttonWidth, buttonHeight).build();
                 categoryButtons.add(categoryButton);
                 addRenderableWidget(categoryButton);
             }
-            searchPrevious = Button.builder(Component.literal("Previous"), button -> open(null, Math.max(0, page - 1), false))
+            searchPrevious = Button.builder(Component.translatable("screen.lootfilter.previous"), button -> open(null, Math.max(0, page - 1), false))
                     .bounds(leftNavX, navY, NAV_BUTTON_WIDTH, 20).build();
-            searchNext = Button.builder(Component.literal("Next"), button -> open(null, Math.min(page + 1, maxPage()), false))
+            searchNext = Button.builder(Component.translatable("screen.lootfilter.next"), button -> open(null, Math.min(page + 1, maxPage()), false))
                     .bounds(rightNavX, navY, NAV_BUTTON_WIDTH, 20).build();
             searchPrevious.visible = initialSearch;
             searchNext.visible = initialSearch;
             addRenderableWidget(searchPrevious);
             addRenderableWidget(searchNext);
-            addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
+            addRenderableWidget(Button.builder(Component.translatable("screen.lootfilter.done"), button -> onClose())
                     .bounds(doneX, navY, NAV_BUTTON_WIDTH, 20).build());
         } else {
-            addRenderableWidget(Button.builder(Component.literal("< Categories"), button -> open(null, 0, false))
+            addRenderableWidget(Button.builder(Component.translatable("screen.lootfilter.categories"), button -> open(null, 0, false))
                     .bounds(center - 110, 24, 100, 20).build());
-            addRenderableWidget(Button.builder(Component.literal("Previous"), button -> open(category, Math.max(0, page - 1), true))
+            addRenderableWidget(Button.builder(Component.translatable("screen.lootfilter.previous"), button -> open(category, Math.max(0, page - 1), true))
                     .bounds(leftNavX, navY, NAV_BUTTON_WIDTH, 20).build());
-            addRenderableWidget(Button.builder(Component.literal("Next"), button -> open(category, Math.min(page + 1, maxPage()), true))
+            addRenderableWidget(Button.builder(Component.translatable("screen.lootfilter.next"), button -> open(category, Math.min(page + 1, maxPage()), true))
                     .bounds(rightNavX, navY, NAV_BUTTON_WIDTH, 20).build());
-            addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
+            addRenderableWidget(Button.builder(Component.translatable("screen.lootfilter.done"), button -> onClose())
                     .bounds(doneX, navY, NAV_BUTTON_WIDTH, 20).build());
         }
     }
@@ -120,12 +120,12 @@ public final class LootFilterScreen extends Screen {
             for (Block block : BuiltInRegistries.BLOCK) {
                 ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
                 Item item = block.asItem();
-                if (id == null || item == Items.AIR || !matchesSearch(id, query)) continue;
+                if (id == null || item == Items.AIR || !matchesSearch(id, item, query)) continue;
                 result.add(new Entry(id.toString(), "block:" + id, new ItemStack(item)));
             }
             for (Item item : BuiltInRegistries.ITEM) {
                 ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
-                if (id == null || item == Items.AIR || item instanceof BlockItem || !matchesSearch(id, query)) continue;
+                if (id == null || item == Items.AIR || item instanceof BlockItem || !matchesSearch(id, item, query)) continue;
                 result.add(new Entry(id.toString(), "item:" + id, new ItemStack(item)));
             }
         } else if (category.blockCategory) {
@@ -146,8 +146,9 @@ public final class LootFilterScreen extends Screen {
         return result;
     }
 
-    private static boolean matchesSearch(ResourceLocation id, String query) {
-        return id.getPath().replace('_', ' ').toLowerCase(Locale.ROOT).contains(query)
+    private static boolean matchesSearch(ResourceLocation id, Item item, String query) {
+        return item.getName().getString().toLowerCase(Locale.ROOT).contains(query)
+                || id.getPath().replace('_', ' ').toLowerCase(Locale.ROOT).contains(query)
                 || id.toString().toLowerCase(Locale.ROOT).contains(query);
     }
 
@@ -203,14 +204,16 @@ public final class LootFilterScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(font, title, width / 2, 12, 0xFFF2F6FA);
         if (!showingEntries && searchQuery.isBlank()) {
-            graphics.drawCenteredString(font, "CHOOSE A CATEGORY OR SEARCH", width / 2, 28, 0xFFB8C5D4);
-            graphics.drawCenteredString(font, "All items are enabled by default", width / 2, height - 24, 0xFF65E69A);
+            graphics.drawCenteredString(font, Component.translatable("screen.lootfilter.choose_category"), width / 2, 28, 0xFFB8C5D4);
+            graphics.drawCenteredString(font, Component.translatable("screen.lootfilter.all_enabled"), width / 2, height - 24, 0xFF65E69A);
             return;
         }
         List<Entry> all = entries();
-        String heading = !searchQuery.isBlank() ? "Search: " + searchQuery : category.label;
-        graphics.drawCenteredString(font, Component.literal(heading), width / 2, 72, 0xFFF2F6FA);
-        graphics.drawCenteredString(font, Component.literal("PAGE " + (page + 1) + " / " + (maxPage() + 1)), width / 2, 84, 0xFF8D9CAF);
+        Component heading = !searchQuery.isBlank()
+                ? Component.translatable("screen.lootfilter.search_title", searchQuery)
+                : Component.translatable(category.translationKey);
+        graphics.drawCenteredString(font, heading, width / 2, 72, 0xFFF2F6FA);
+        graphics.drawCenteredString(font, Component.translatable("screen.lootfilter.page", page + 1, maxPage() + 1), width / 2, 84, 0xFF8D9CAF);
         int start = page * PAGE_SIZE, end = Math.min(all.size(), start + PAGE_SIZE);
         int left = width / 2 - (COLUMNS * SLOT_SIZE) / 2;
         for (int index = start; index < end; index++) {
@@ -226,17 +229,17 @@ public final class LootFilterScreen extends Screen {
             graphics.fill(x + 21, y, x + 22, y + 22, slotBorder);
             graphics.renderItem(entry.stack(), x + 3, y + 3);
             if (mouseX >= x && mouseX < x + 22 && mouseY >= y && mouseY < y + 22) {
-                graphics.renderTooltip(font, Component.literal(displayName(entry.id())), mouseX, mouseY);
+                graphics.renderTooltip(font, entry.stack().getHoverName(), mouseX, mouseY);
             }
         }
         if (all.isEmpty()) {
-            graphics.drawCenteredString(font, "No matching items found", width / 2, GRID_TOP + 28, 0xFFFFB86B);
-            graphics.drawCenteredString(font, "Try another name or item ID", width / 2, GRID_TOP + 42, 0xFF9AA8B8);
+            graphics.drawCenteredString(font, Component.translatable("screen.lootfilter.no_results"), width / 2, GRID_TOP + 28, 0xFFFFB86B);
+            graphics.drawCenteredString(font, Component.translatable("screen.lootfilter.try_another_search"), width / 2, GRID_TOP + 42, 0xFF9AA8B8);
         }
         graphics.fill(width / 2 - 115, height - 58, width / 2 - 111, height - 54, 0xFF3FAD70);
-        graphics.drawString(font, "Enabled", width / 2 - 107, height - 59, 0xFFB7F4CD, false);
+        graphics.drawString(font, Component.translatable("screen.lootfilter.enabled"), width / 2 - 107, height - 59, 0xFFB7F4CD, false);
         graphics.fill(width / 2 + 3, height - 58, width / 2 + 7, height - 54, 0xFF414B59);
-        graphics.drawString(font, "Disabled", width / 2 + 11, height - 59, 0xFFB7C0CC, false);
+        graphics.drawString(font, Component.translatable("screen.lootfilter.disabled"), width / 2 + 11, height - 59, 0xFFB7C0CC, false);
     }
 
     @Override
@@ -270,14 +273,15 @@ public final class LootFilterScreen extends Screen {
     @Override public boolean isPauseScreen() { return false; }
 
     private enum Category {
-        BUILDING("Construction Blocks", true), DECORATION("Decoration Blocks", true),
-        PLANTS("Saplings & Plants", true), ORES("Ores & Mineral Blocks", true),
-        REDSTONE("Redstone", true), TOOLS("Tools", false), COMBAT("Weapons & Armor", false),
-        FOOD("Food", false), MATERIALS("Materials & Resources", false), POTIONS("Potions & Brewing", false),
-        TRANSPORT("Transport", false), OTHER("Other Items", false);
-        private final String label;
+        BUILDING("screen.lootfilter.category.building", true), DECORATION("screen.lootfilter.category.decoration", true),
+        PLANTS("screen.lootfilter.category.plants", true), ORES("screen.lootfilter.category.ores", true),
+        REDSTONE("screen.lootfilter.category.redstone", true), TOOLS("screen.lootfilter.category.tools", false),
+        COMBAT("screen.lootfilter.category.combat", false), FOOD("screen.lootfilter.category.food", false),
+        MATERIALS("screen.lootfilter.category.materials", false), POTIONS("screen.lootfilter.category.potions", false),
+        TRANSPORT("screen.lootfilter.category.transport", false), OTHER("screen.lootfilter.category.other", false);
+        private final String translationKey;
         private final boolean blockCategory;
-        Category(String label, boolean blockCategory) { this.label = label; this.blockCategory = blockCategory; }
+        Category(String translationKey, boolean blockCategory) { this.translationKey = translationKey; this.blockCategory = blockCategory; }
     }
 
     private record Entry(String id, String selectionKey, ItemStack stack) {}
