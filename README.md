@@ -1,4 +1,4 @@
-# Tacz Enchanting
+# LootFilter
 
 A Minecraft **1.20.1 Forge** add-on focused on custom enchantments for **Timeless and Classics Zero (TaCZ)** firearms.
 
