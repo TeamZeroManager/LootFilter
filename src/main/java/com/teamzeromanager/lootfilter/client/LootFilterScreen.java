@@ -147,7 +147,7 @@ public final class LootFilterScreen extends Screen {
     }
 
     private static boolean matchesSearch(ResourceLocation id, Item item, String query) {
-        return item.getName().getString().toLowerCase(Locale.ROOT).contains(query)
+        return item.getName(new ItemStack(item)).getString().toLowerCase(Locale.ROOT).contains(query)
                 || id.getPath().replace('_', ' ').toLowerCase(Locale.ROOT).contains(query)
                 || id.toString().toLowerCase(Locale.ROOT).contains(query);
     }
