@@ -32,6 +32,9 @@ public final class LootFilterScreen extends Screen {
     private final List<Button> categoryButtons = new ArrayList<>();
     private Button searchPrevious;
     private Button searchNext;
+    // Registry results are expensive to rebuild; keep them for this screen/query.
+    private List<Entry> cachedEntries;
+    private String cachedQuery;
 
     private final Category category;
     private final int page;
@@ -112,8 +115,10 @@ public final class LootFilterScreen extends Screen {
     private int maxPage() { return Math.max(0, (entries().size() - 1) / PAGE_SIZE); }
 
     private List<Entry> entries() {
-        List<Entry> result = new ArrayList<>();
         String query = searchQuery.trim().toLowerCase(Locale.ROOT);
+        if (cachedEntries != null && query.equals(cachedQuery)) return cachedEntries;
+
+        List<Entry> result = new ArrayList<>();
         boolean globalSearch = !query.isEmpty();
         if (category == null && !globalSearch) return result;
         if (globalSearch) {
@@ -143,7 +148,9 @@ public final class LootFilterScreen extends Screen {
             }
         }
         result.sort(Comparator.comparing(Entry::id));
-        return result;
+        cachedQuery = query;
+        cachedEntries = result;
+        return cachedEntries;
     }
 
     private static boolean matchesSearch(ResourceLocation id, Item item, String query) {
@@ -270,7 +277,8 @@ public final class LootFilterScreen extends Screen {
         return super.charTyped(codePoint, modifiers);
     }
 
-    @Override public boolean isPauseScreen() { return false; }
+    // Let Minecraft pause the integrated server while this screen is open.
+    @Override public boolean isPauseScreen() { return true; }
 
     private enum Category {
         BUILDING("screen.lootfilter.category.building", true), DECORATION("screen.lootfilter.category.decoration", true),
