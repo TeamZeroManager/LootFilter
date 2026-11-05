@@ -1,8 +1,8 @@
-name: Build mod
+name: Build LootFilter
 
 on:
   push:
-    branches: [main]
+    branches: [main, lootfilter-rework]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -28,6 +28,6 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: taczenchanting-${{ github.sha }}
+          name: lootfilter-${{ github.sha }}
           path: build/libs/*.jar
           if-no-files-found: error
